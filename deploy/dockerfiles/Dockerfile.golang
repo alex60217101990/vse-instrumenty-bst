@@ -1,0 +1,47 @@
+# # First image to build the binary
+# FROM alpine as builder
+
+# RUN apk --no-cache add make gcc libc-dev
+# COPY . /src
+# RUN mkdir /pkg && cd /src && make && make DESTDIR=/pkg install
+
+# Compile stage
+FROM golang:1.14.7 AS build-env
+RUN apt-get update && apt-get install -y \
+  zstd \
+  git \
+  gcc \
+  bash \
+  && rm -rf /var/lib/apt/lists/*
+# RUN apt update && apk add --no-cache git=2.24.3-r0 gcc 
+#zstd=1.4.4-r1 \ 
+# zstd \
+# zstd-dev \
+# lz4-dev \
+# musl-dev 
+
+ENV GO111MODULE='on'
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOARCH=amd64
+RUN git config --global core.autocrlf false
+WORKDIR $GOPATH/src/github.com/alex60217101990/vse-instrumenty-bst
+COPY . .
+RUN go mod download
+RUN ls -hla
+# Build the binary.
+RUN go build -v -ldflags="-w -s" -o /go/bin/server ./cmd/main.go
+
+# Final stage
+FROM ubuntu:18.04
+RUN apt-get update && apt-get install -y \
+  zstd \
+  git \
+  gcc \
+  bash \
+  && rm -rf /var/lib/apt/lists/*
+EXPOSE 8077
+WORKDIR /
+COPY ./deploy/configs/app-configs.yaml /app-configs.yaml
+COPY --from=build-env /go/bin/server /
+CMD ["/server", "-c", "/app-configs.yaml", "-d", "true"]

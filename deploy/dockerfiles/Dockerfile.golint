@@ -1,0 +1,5 @@
+# Compile stage
+FROM golangci/golangci-lint:v1.30.0
+WORKDIR /app
+COPY . /app
+CMD ["golangci-lint", "run", "/app/cmd"]

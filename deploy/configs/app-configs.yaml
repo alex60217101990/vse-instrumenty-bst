@@ -1,0 +1,13 @@
+ver: 0.0.1
+service-name: bst_tree
+logger:
+  logger-type: zero
+  logs-path: "" #./tmp/logs
+http-server:
+  server-host: ""
+  server-port: 8077
+bst:
+  snapshot-path: ""
+  use-compression: true
+  use-limit: true
+  size: 30
